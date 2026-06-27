@@ -1,0 +1,62 @@
+{
+    "name": "patxiai/patxi",
+    "description": "The oficial PatxiAI starter kit.",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Ibon Azkoitia"
+        }
+    ],
+    "require": {
+        "php": "^8.3",
+        "illuminate/support": "^13.0"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.29",
+        "mockery/mockery": "^1.6",
+        "orchestra/testbench": "^11.1",
+        "phpstan/phpstan": "^2.2",
+        "pestphp/pest": "^4.7",
+        "rector/rector": "^2.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "PatxiAI\\Patxi\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "PatxiAI\\Patxi\\PatxiServiceProvider"
+            ]
+        }
+    },
+    "scripts": {
+        "lint": [
+            "pint --format agent",
+            "phpstan --memory-limit=-1",
+            "rector"
+        ],
+        "test": "pest",
+        "test:lint": [
+            "pint --test --format agent",
+            "rector --dry-run"
+        ],
+        "test:types": "phpstan",
+        "check": [
+            "@composer lint",
+            "@composer test"
+        ]
+    },
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    }
+}
