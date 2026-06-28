@@ -8,6 +8,7 @@ use Laravel\Fortify\Contracts\LoginResponse;
 use Laravel\Fortify\Contracts\RegisterResponse;
 use Laravel\Fortify\Fortify;
 use Override;
+use PatxiAI\Patxi\Console\Commands\InstallPatxiAI;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
@@ -17,6 +18,7 @@ class PatxiServiceProvider extends PackageServiceProvider
     {
         $package
             ->name('patxiai-patxi')
+            ->hasCommand(InstallPatxiAI::class)
             ->hasRoutes('web')
             ->hasViews();
     }

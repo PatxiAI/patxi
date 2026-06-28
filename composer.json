@@ -12,10 +12,12 @@
         "php": "^8.3",
         "illuminate/support": "^13.0",
         "laravel/fortify": "^1.36",
+        "laravel/prompts": "^0.3.21",
         "livewire/blaze": "^1.0",
         "livewire/flux": "^2.15",
         "livewire/livewire": "^4.3",
-        "spatie/laravel-package-tools": "^1.93"
+        "spatie/laravel-package-tools": "^1.93",
+        "patxiai/patxi-core": "dev-main"
     },
     "require-dev": {
         "laravel/pint": "^1.29",
@@ -63,5 +65,14 @@
         "allow-plugins": {
             "pestphp/pest-plugin": true
         }
-    }
+    },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../*",
+            "options": {
+                "symlink": true
+            }
+        }
+    ]
 }
