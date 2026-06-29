@@ -10,4 +10,4 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::view('integrations', 'patxiai-patxi::pages.dashboard.integrations.index')->name('integrations');
 });
 
-// require __DIR__.'/settings.php';
+require __DIR__.'/settings.php';

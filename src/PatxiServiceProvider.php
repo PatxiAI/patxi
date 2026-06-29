@@ -7,6 +7,7 @@ namespace PatxiAI\Patxi;
 use Laravel\Fortify\Contracts\LoginResponse;
 use Laravel\Fortify\Contracts\RegisterResponse;
 use Laravel\Fortify\Fortify;
+use Livewire\Livewire;
 use Override;
 use PatxiAI\Patxi\Console\Commands\InstallPatxiAI;
 use Spatie\LaravelPackageTools\Package;
@@ -45,8 +46,13 @@ class PatxiServiceProvider extends PackageServiceProvider
 
     public function bootingPackage(): void
     {
+        Livewire::addNamespace('patxiai-patxi', viewPath: __DIR__.'/../resources/views');
+
+        app('view')->addNamespace('layouts', __DIR__.'/../resources/views/components/layouts');
+
         Fortify::loginView(fn () => view('patxiai-patxi::pages.auth.login'));
         Fortify::registerView(fn () => view('patxiai-patxi::pages.auth.register'));
         Fortify::requestPasswordResetLinkView(fn () => view('patxiai-patxi::pages.auth.forgot-password'));
+        Fortify::confirmPasswordView(fn () => view('patxiai-patxi::pages.auth.confirm-password'));
     }
 }

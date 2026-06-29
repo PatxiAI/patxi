@@ -5,10 +5,6 @@
         <!-- Session Status -->
         <x-patxiai-patxi::auth-session-status class="text-center" :status="session('status')" />
 
-        {{-- @chisel-passkeys --}}
-        <x-patxiai-patxi::passkey-verify />
-        {{-- @end-chisel-passkeys --}}
-
         <form method="POST" action="{{ route('login.store') }}" class="flex flex-col gap-6">
             @csrf
 
