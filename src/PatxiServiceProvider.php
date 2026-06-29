@@ -54,5 +54,6 @@ class PatxiServiceProvider extends PackageServiceProvider
         Fortify::registerView(fn () => view('patxiai-patxi::pages.auth.register'));
         Fortify::requestPasswordResetLinkView(fn () => view('patxiai-patxi::pages.auth.forgot-password'));
         Fortify::confirmPasswordView(fn () => view('patxiai-patxi::pages.auth.confirm-password'));
+        Fortify::resetPasswordView(fn () => view('patxiai-patxi::pages.auth.reset-password'));
     }
 }
