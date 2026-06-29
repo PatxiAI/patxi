@@ -19,7 +19,6 @@ class PatxiServiceProvider extends PackageServiceProvider
     {
         $package
             ->name('patxiai-patxi')
-            ->hasConfigFile('agents')
             ->hasCommand(InstallPatxiAI::class)
             ->hasRoutes('web')
             ->hasViews();

@@ -39,10 +39,10 @@
     <!-- Agents -->
     <section id="agents">
         @php
-            $agents = config('agents');
+            $agents = app(\PatxiAI\PatxiCore\Repositories\AgentRepository::class)->all();
         @endphp
 
-        @foreach ($agents['agents'] as $agent)
+        @foreach ($agents as $agent)
             <!-- {{$agent['title']}} -->
             <section class="agents-{{$agent['title']}}">
                 <flux:heading size="lg" class="mb-2 text-zinc-600">{{$agent['title']}} {{__('Teams')}}</flux:heading>
