@@ -3,8 +3,10 @@
     <head>
         @include('patxiai-patxi::partials.head')
     </head>
-    <body class="min-h-screen bg-zinc-50 dark:bg-zinc-900 antialised">
-        <flux:header class="bg-white dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700">
+    <body class="min-h-screen bg-zinc-50 dark:bg-zinc-900 antialised"
+        @keydown.window.prevent.meta.k="window.Livewire.navigate('{{ route('chat') }}')"
+        >
+        <flux:header sticky class="bg-white dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700">
             <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />
 
             <x-patxiai-patxi::app-logo href="{{ route('dashboard') }}" wire:navigate />

@@ -120,7 +120,9 @@ new #[Title__('Agents')] class extends Component
     <!-- Patxi -->
     <section id="agent-patxi" class="mt-6 mb-10">
         <flux:card class="flex items-center gap-5 p-5 bg-orange-50 border-orange-500! rounded-2xl shadow-none">
-            <x-patxiai-patxi::app-logo-icon />
+            <div class="w-16">
+                <x-patxiai-patxi::app-logo-icon />
+            </div>
 
             <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-2 mb-1">

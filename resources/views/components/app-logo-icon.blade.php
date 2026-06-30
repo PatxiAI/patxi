@@ -1,4 +1,4 @@
-<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="IAPRO">
+<svg width="" height="" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="IAPRO">
   <rect width="48" height="48" rx="11" fill="url(#iapro_g)"></rect>
 
   <path d="M24 11 L34 29.5 H14 L24 11 Z" fill="#fff" fill-opacity="0.96"></path>
