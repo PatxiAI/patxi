@@ -9,6 +9,7 @@ use Livewire\Attributes\On;
 use Livewire\Component;
 use PatxiAI\PatxiCore\Ai\Agents\Patxi;
 use PatxiAI\PatxiCore\Models\AgentChainStep;
+use PatxiAI\PatxiCore\Repositories\AgentRepository;
 
 new class extends Component
 {
@@ -86,28 +87,34 @@ new class extends Component
 
         $chainSteps = AgentChainStep::where('conversation_id', $this->conversationId)
             ->orderBy('sort_order')
-            ->get(['conversation_message_id', 'caller_agent', 'called_agent', 'depth'])
+            ->get(['conversation_message_id', 'caller_agent', 'called_agent', 'depth', 'type'])
             ->groupBy('conversation_message_id');
 
         $this->messages = $dbMessages->map(function ($m) use ($chainSteps) {
             $content = $m->content;
+            $steps = $chainSteps->get($m->id, collect());
 
             // Fallback: if Patxi returned empty text, surface the last tool result directly.
             if (empty($content) && ! empty($m->tool_results)) {
                 $content = collect($m->tool_results)->last()['result'] ?? '';
             }
 
+            $chain = $this->buildAgentChain($steps);
+
             return [
                 'role' => $m->role,
                 'content' => $content,
-                'chain' => $this->buildChain($chainSteps->get($m->id, collect())),
+                'flow' => $this->buildDepartmentFlow($chain),
+                'tools' => $this->buildToolsUsed($steps),
             ];
         })->toArray();
     }
 
-    /** Build a flat ordered path of unique agent names from the chain steps. */
-    private function buildChain(Collection $steps): array
+    /** Build a flat ordered path of unique agent names from the agent hand-off steps. */
+    private function buildAgentChain(Collection $steps): array
     {
+        $steps = $steps->where('type', 'agent');
+
         if ($steps->isEmpty()) {
             return [];
         }
@@ -121,6 +128,50 @@ new class extends Component
         }
 
         return $chain;
+    }
+
+    /** Group the agent chain (minus the Patxi root) by department, then by worker within it. */
+    private function buildDepartmentFlow(array $chain): array
+    {
+        $workers = array_slice($chain, 1);
+        $repository = new AgentRepository;
+        $groups = [];
+
+        foreach ($workers as $name) {
+            $department = $repository->departmentForAgent($name);
+            $key = $department['name'] ?? $name;
+            $lastKey = array_key_last($groups);
+
+            if ($lastKey !== null && $groups[$lastKey]['name'] === $key) {
+                $groups[$lastKey]['workers'][] = $name;
+            } else {
+                $groups[] = [
+                    'name' => $key,
+                    'icon' => $department['icon'] ?? null,
+                    'workers' => [$name],
+                ];
+            }
+        }
+
+        return $groups;
+    }
+
+    /** Build an ordered list of tools invoked, with the agent that invoked each one. */
+    private function buildToolsUsed(Collection $steps): array
+    {
+        $tools = [];
+
+        foreach ($steps->where('type', 'tool') as $step) {
+            $last = end($tools);
+
+            if ($last && $last['agent'] === $step->caller_agent && $last['tool'] === $step->called_agent) {
+                continue;
+            }
+
+            $tools[] = ['agent' => $step->caller_agent, 'tool' => $step->called_agent];
+        }
+
+        return $tools;
     }
 }
 ?>
@@ -142,23 +193,59 @@ new class extends Component
                     </div>
                     <div class="min-w-0 flex-1">
 
-                        @if (!empty($message['chain']))
-                            <div class="flex flex-wrap items-center gap-1 mb-4">
-                                @foreach ($message['chain'] as $i => $agentName)
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 border border-orange-200 dark:border-orange-800">
-                                        <svg class="size-3 shrink-0" viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="5" r="3"/><path d="M2 13c0-3.3 2.7-6 6-6s6 2.7 6 6H2z"/></svg>
-                                        {{ $agentName }}
-                                    </span>
-                                    @if (!$loop->last)
-                                        <svg class="size-3 text-zinc-400 shrink-0" viewBox="0 0 16 16" fill="currentColor"><path d="M6 3l5 5-5 5"/></svg>
-                                    @endif
-                                @endforeach
-                            </div>
-                        @endif
-
                         <div class="markdown">
                             {!! Str::markdown($message['content'] ?? '') !!}
                         </div>
+
+                        @if (!empty($message['flow']) || !empty($message['tools']))
+                            <div x-data="{ open: false }" class="mt-2">
+                                <button type="button" @click="open = !open" class="inline-flex items-center gap-1 text-xs text-zinc-400 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors">
+                                    <svg class="size-3 shrink-0 transition-transform" :class="{ 'rotate-90': open }" viewBox="0 0 16 16" fill="currentColor"><path d="M6 3l5 5-5 5"/></svg>
+                                    {{ __('View flow') }}
+                                </button>
+
+                                <div x-show="open" x-transition x-cloak class="mt-2 space-y-3 rounded-lg border border-zinc-200 dark:border-zinc-700 p-3">
+                                    @if (!empty($message['flow']))
+                                        <div>
+                                            <div class="text-xs font-medium text-zinc-400 dark:text-zinc-500 mb-1">{{ __('Flow') }}</div>
+                                            <div class="space-y-2">
+                                                @foreach ($message['flow'] as $group)
+                                                    <div class="flex items-center gap-2">
+                                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 border border-orange-200 dark:border-orange-800">
+                                                            @if ($group['icon'])
+                                                                <flux:icon icon="{{ $group['icon'] }}" class="size-3 shrink-0"/>
+                                                            @endif
+                                                            {{ $group['name'] }}
+                                                        </span>
+                                                        <svg class="size-3 text-zinc-400 shrink-0" viewBox="0 0 16 16" fill="currentColor"><path d="M6 3l5 5-5 5"/></svg>
+                                                        <div class="flex flex-wrap items-center gap-1">
+                                                            @foreach ($group['workers'] as $worker)
+                                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700">
+                                                                    {{ $worker }}
+                                                                </span>
+                                                            @endforeach
+                                                        </div>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    @endif
+
+                                    @if (!empty($message['tools']))
+                                        <div>
+                                            <div class="text-xs font-medium text-zinc-400 dark:text-zinc-500 mb-1">{{ __('Tools used') }}</div>
+                                            <div class="flex flex-wrap items-center gap-1">
+                                                @foreach ($message['tools'] as $toolStep)
+                                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700">
+                                                        {{ $toolStep['agent'] }} &middot; {{ $toolStep['tool'] }}
+                                                    </span>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
 
                     </div>
                 </div>
